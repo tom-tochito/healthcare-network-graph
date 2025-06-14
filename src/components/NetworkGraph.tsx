@@ -172,9 +172,6 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({
   }, [hoveredLink]);
 
   const handleNodeHover = useCallback((node: any) => {
-    if (process.env.NODE_ENV === 'production') {
-      console.log('Node hover:', node ? node.id : 'none');
-    }
     setHoveredNode(node ? node.id : null);
     onNodeHover(node);
   }, [onNodeHover]);
@@ -199,59 +196,37 @@ const NetworkGraph: React.FC<NetworkGraphProps> = ({
   }, [onLinkHover]);
 
   return (
-    <div className="network-graph-container" style={{ touchAction: 'none' }}>
+    <div className="network-graph-container">
       <ForceGraph2D
         ref={graphRef}
         graphData={data}
         nodeId="id"
         nodeCanvasObject={nodeCanvasObject}
         nodePointerAreaPaint={(node: any, color: string, ctx: CanvasRenderingContext2D) => {
-          // Ensure node has valid coordinates
-          if (typeof node.x !== 'number' || typeof node.y !== 'number') {
-            return;
-          }
-          
           ctx.fillStyle = color;
           const nodeSize = (node.fx === 0 && node.fy === 0) ? 40 : 30;
-          // Add a larger hit area for better click/hover detection
-          const hitAreaSize = nodeSize + 15;
           ctx.beginPath();
-          ctx.arc(node.x, node.y, hitAreaSize, 0, 2 * Math.PI);
+          ctx.arc(node.x || 0, node.y || 0, nodeSize, 0, 2 * Math.PI);
           ctx.fill();
         }}
         linkCanvasObject={linkCanvasObject}
-        onNodeClick={(node: any) => {
-          if (node) {
-            onNodeClick(node);
-          }
-        }}
-        onNodeHover={(node: any) => {
-          handleNodeHover(node);
-          // Update cursor style
-          if (graphRef.current) {
-            const canvas = graphRef.current.querySelector('canvas');
-            if (canvas) {
-              canvas.style.cursor = node ? 'pointer' : 'grab';
-            }
-          }
-        }}
+        onNodeClick={onNodeClick}
+        onNodeHover={handleNodeHover}
         onNodeDragEnd={(node: any) => {
           node.fx = node.x;
           node.fy = node.y;
         }}
         onLinkClick={(link: any) => {
-          if (link && link.source && link.target) {
-            const linkData: NetworkLink = {
-              source: link.source.id,
-              target: link.target.id,
-              type: link.type,
-              strength: link.strength,
-              label: link.label,
-              publications: link.publications,
-              sharedInstitution: link.sharedInstitution
-            };
-            onLinkClick(linkData);
-          }
+          const linkData: NetworkLink = {
+            source: link.source.id,
+            target: link.target.id,
+            type: link.type,
+            strength: link.strength,
+            label: link.label,
+            publications: link.publications,
+            sharedInstitution: link.sharedInstitution
+          };
+          onLinkClick(linkData);
         }}
         onLinkHover={handleLinkHover}
         d3VelocityDecay={0.4}

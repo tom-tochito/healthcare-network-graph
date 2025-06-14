@@ -6,12 +6,3 @@
   border-radius: 12px;
   overflow: hidden;
 }
-
-.network-graph-container canvas {
-  position: relative;
-  z-index: 1;
-}
-
-.network-graph-container canvas:active {
-  cursor: grabbing !important;
-}
